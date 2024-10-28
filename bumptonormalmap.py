@@ -41,7 +41,8 @@ import time
 # UTILITY
 #################
 def normalize(vec: np.array) -> np.array:
-    length = np.sqrt(np.dot(vec, vec))
+    # length = np.sqrt(np.dot(vec, vec))
+    length = np.expand_dims(np.linalg.norm(vec, axis=-1), axis=-1)
     return vec / length
 
 
@@ -200,12 +201,16 @@ def is_float(element: any) -> bool:
 # OPENCV's SOBEL (fastest)
 ##################################
 if __name__ == '__main__':
-    if len(sys.argv) != 3:
-        print("arguments: <path to image> <strength>")
+    if len(sys.argv) != 4:
+        print("arguments: <path to image> <strength> <mode>")
         sys.exit()
 
     if not is_float(sys.argv[2]):
         print(sys.argv[2] + " is not a float")
+        sys.exit()
+
+    if sys.argv[3] not in ["png", "exr"]:
+        print("mode has to be either 'png' or 'exr'")
         sys.exit()
 
     img = cv2.imread(sys.argv[1])
@@ -218,8 +223,6 @@ if __name__ == '__main__':
         print("strength has to be >0")
         sys.exit()
 
-    targetImg = np.zeros((height, width, 3), np.uint8)
-
     start = time.time()
 
     scale = 1
@@ -230,20 +233,17 @@ if __name__ == '__main__':
     grad_y = cv2.Sobel(img, ddepth, 0, 1, ksize=3, scale=scale, delta=delta, borderType=cv2.BORDER_REPLICATE)
     print("Sobel filters applied...")
 
-    for y in range(height):
-        for x in range(width):
-            if (y * width + x) % 10000 == 0:
-                print("Writing normal map... " + "{:.{}f}".format((y * width + x) / (width * height) * 100.0, 2) + "%")
+    dx = grad_x[:, :, 0] / 255.0
+    dy = grad_y[:, :, 0] / 255.0
+    inv_strength = np.full_like(dx, 1.0 / strength)
+    normals = normalize(np.stack([inv_strength, dy, dx], axis=-1)) # BGR format
+    colors = normals * 0.5 + 0.5
 
-            dx = grad_x[y][x][0] / 255.0
-            dy = grad_y[y][x][0] / 255.0
-
-            normal = normalize(np.array([dx, dy, 1.0 / strength]))
-
-            targetImg[y][x] = normalToColor(normal)
+    if sys.argv[3] == "png":
+        colors = np.uint8(colors * 255)
+        cv2.imwrite("normal_map.png", colors)
+    else:
+        cv2.imwrite("normal_map.exr", colors.astype(np.float32))
 
     end = time.time()
-
-    cv2.imwrite("normal_map.png", targetImg)
-
     print("Finished. Conversion took " + str(end - start) + "s.")
