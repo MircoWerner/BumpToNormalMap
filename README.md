@@ -9,7 +9,7 @@ Simple Python script to convert a bump map to a normal map.
 - opencv-python 
 
 ## Usage / Run
-`python bumptonormalmap.py <path to bump map> <strength>`
+`python bumptonormalmap.py <path to bump map> <strength> <output format>`
 
 ```python
 # <path to bump map> : string -> path to the input image (the bump map, i.e. the height map)
@@ -20,6 +20,8 @@ Simple Python script to convert a bump map to a normal map.
 #                           strength = 2 (more defined features)
 #                           strength = 10 (really strong normal mapping effect...)
 #                           just experiment a little bit :)
+#
+# <output format> : string -> "png" or "exr"; output image format. Use "exr" for higher precision.
 ```
 
 ## How does it work?
@@ -48,7 +50,7 @@ Simple Python script to convert a bump map to a normal map.
 ## Example
 *The bump map is taken from the `LPS Head` model. The complete model including the bump map can be downloaded from https://casual-effects.com/data/.*
 
-`python bumptonormalmap.py example/bump_map.png 2`
+`python bumptonormalmap.py example/bump_map.png 2 png`
 
 ![img bump map](https://github.com/MircoWerner/BumpToNormalMap/blob/main/example/bump_map.png?raw=true)
 
