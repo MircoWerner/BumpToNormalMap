@@ -1,7 +1,7 @@
 ##################################
 # BUMP to NORMAL MAP
 ##################################
-# python bumptonormalmap.py <path to bump map> <strength>
+# python bumptonormalmap.py <path to bump map> <strength> <output format>
 #
 # <path to bump map> : string -> path to the input image (the bump map, i.e. the height map)
 #
