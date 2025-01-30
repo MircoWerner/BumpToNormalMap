@@ -88,6 +88,26 @@ def main():
 
 
 def bump_to_normal(path, strength=1.0, output_format="png"):
+    """Convert a bump map to a normal map.
+
+    Args:
+        path (str): A bump map image.
+        strength (float, optional): Strength of normal map (near 0 for
+            smooth, 2.0 for more defined features, up to 10.0 or more
+            for very strong). Defaults to 1.0.
+        output_format (str, optional): File format to save. Defaults to
+            "png".
+
+    Raises:
+        ValueError: If output_format is not in NORMAL_FORMAT_CHOICES
+            ("png", "exr").
+
+    Returns:
+        str: The path of the new image. If the old name contained "bump"
+            (case-insensitive, but whole word only so "bumpy" or similar
+            is ignored). If not, "_normal" is appended to name as per
+            conventions such as for Blender's Node Wrangler.
+    """
     img = cv2.imread(path, cv2.IMREAD_ANYCOLOR | cv2.IMREAD_ANYDEPTH)
     if img is None:
         print("Could not read image")
@@ -155,6 +175,7 @@ def bump_to_normal(path, strength=1.0, output_format="png"):
     end = time.time()
     print('Wrote "{}".'.format(new_path))
     print("Conversion took " + str(end - start) + "s.")
+    return new_path
 
 
 if __name__ == '__main__':
