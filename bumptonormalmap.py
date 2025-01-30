@@ -129,10 +129,15 @@ def bump_to_normal(path, strength=1.0, output_format="png"):
 
     parent, name = os.path.split(path)
     no_ext, _ = os.path.splitext(name)
-    new_no_ext = re.sub(re.escape("bump"), "normal", no_ext,
-                        flags=re.IGNORECASE)
+    old_flag = "bump"
+    new_flag = "normal"
+    # Find old_flag using "whole word only" search (This pattern matches
+    #   if surrounded by non-word or edge of string like "\b", but
+    #   allows "_" or other as a boundary as well):
+    pattern = r'(?<![a-zA-Z]){}(?![a-zA-Z])'.format(re.escape(old_flag))
+    new_no_ext = re.sub(pattern, new_flag, no_ext, flags=re.IGNORECASE)
     if "normal" not in new_no_ext:
-        # It didn't contain the old string, so add new one:
+        # There was nothing to replace, so add new flag to name manually:
         new_no_ext += "_normal"
 
     new_name = "{}.{}".format(new_no_ext, output_format)
