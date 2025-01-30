@@ -48,7 +48,8 @@ except ImportError:
     missing_packages["numpy"] = "python3-numpy"
 if missing_packages:
     sys.stderr.write(
-        "ImportError: You must install the missing dependencies(s) {} from pip/conda"
+        "ImportError: You must install the missing dependencies(s) {}"
+        " such as from pip/conda"
         .format(list(missing_packages.keys())))
     if platform.system() != "Windows":
         sys.stderr.write(
@@ -56,6 +57,7 @@ if missing_packages:
             " if your distro provides them"
             " (recommended in the case of such modules)")
     print(":", file=sys.stderr)
+    sys.stderr.write("   ")
     for value in missing_packages.values():
         sys.stderr.write(" {}".format(value))
     print("", file=sys.stderr)
@@ -67,14 +69,20 @@ def normalize(vec: np.array) -> np.array:
     return vec / length
 
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser(description='Convert bump/height map to normal map')
     parser.add_argument('path', type=str, help='path to the input image (the bump map, i.e. the height map)')
     parser.add_argument('strength', type=float, help='strength of the normal map. results in smoother (strength -> 0) or sharper (strength -> \\infty) features')
     parser.add_argument('output_format', type=str, choices=["png", "exr"], help='output image format')
     args = parser.parse_args()
 
-    img = cv2.imread(args.path, cv2.IMREAD_ANYCOLOR | cv2.IMREAD_ANYDEPTH)
+    bump_to_normal(args.path, strength=args.strength,
+                   output_format=args.output_format)
+    return 0
+
+
+def bump_to_normal(path, strength=1.0, output_format="png"):
+    img = cv2.imread(path, cv2.IMREAD_ANYCOLOR | cv2.IMREAD_ANYDEPTH)
     if img is None:
         print("Could not read image")
         sys.exit()
@@ -91,7 +99,7 @@ if __name__ == '__main__':
     height = dim[0]
     width = dim[1]
 
-    if args.strength <= 0.0:
+    if strength <= 0.0:
         print("strength has to be >0")
         sys.exit()
 
@@ -107,11 +115,11 @@ if __name__ == '__main__':
 
     dx = grad_x[:, :, 0]
     dy = grad_y[:, :, 0]
-    inv_strength = np.full_like(dx, 1.0 / args.strength)
+    inv_strength = np.full_like(dx, 1.0 / strength)
     normals = normalize(np.stack([inv_strength, dy, dx], axis=-1)) # BGR format
     colors = normals * 0.5 + 0.5
 
-    if args.output_format == "png":
+    if output_format == "png":
         colors = np.uint8(colors * 255)
         cv2.imwrite("normal_map.png", colors)
     else:
@@ -119,3 +127,7 @@ if __name__ == '__main__':
 
     end = time.time()
     print("Finished. Conversion took " + str(end - start) + "s.")
+
+
+if __name__ == '__main__':
+    sys.exit(main())
