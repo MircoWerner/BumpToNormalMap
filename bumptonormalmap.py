@@ -6,7 +6,7 @@ python bumptonormalmap.py <path to bump map> <strength> <output format>
 <path to bump map> : string -> path to the input image (the bump map, i.e. the height map)
 
 <strength> : float > 0 -> "strength" of the normal map
-                          results in smoother (strength -> 0) or sharper (strength -> \infty) features
+                          results in smoother (strength -> 0) or sharper (strength -> \\infty) features
                           strength = 1 (recommended to start with)
                           strength = 2 (more defined features)
                           strength = 10 (really strong normal mapping effect...)
@@ -34,7 +34,9 @@ Note that the normals are transformed from [-1,1] space to [0,1] space (normal *
 Remember to undo the transformation (vec3(2.0) * normal - vec3(1.0)) when reading the normals from the normal map.
 """
 import argparse
+import os
 import platform
+import re
 import sys
 import time
 
@@ -76,7 +78,7 @@ NORMAL_FORMAT_CHOICES = ["png", "exr"]
 def main():
     parser = argparse.ArgumentParser(description='Convert bump/height map to normal map')
     parser.add_argument('path', type=str, help='path to the input image (the bump map, i.e. the height map)')
-    parser.add_argument('strength', type=float, help='strength of the normal map. results in smoother (strength -> 0) or sharper (strength -> \infty) features')
+    parser.add_argument('strength', type=float, help='strength of the normal map. results in smoother (strength -> 0) or sharper (strength -> \\infty) features')
     parser.add_argument('output_format', type=str, choices=NORMAL_FORMAT_CHOICES, help='output image format')
     args = parser.parse_args()
 
@@ -125,18 +127,29 @@ def bump_to_normal(path, strength=1.0, output_format="png"):
     normals = normalize(np.stack([inv_strength, dy, dx], axis=-1)) # BGR format
     colors = normals * 0.5 + 0.5
 
+    parent, name = os.path.split(path)
+    no_ext, _ = os.path.splitext(name)
+    new_no_ext = re.sub(re.escape("bump"), "normal", no_ext,
+                        flags=re.IGNORECASE)
+    if "normal" not in new_no_ext:
+        # It didn't contain the old string, so add new one:
+        new_no_ext += "_normal"
+
+    new_name = "{}.{}".format(new_no_ext, output_format)
+    new_path = os.path.join(parent, new_name)
     if output_format == "png":
         colors = np.uint8(colors * 255)
-        cv2.imwrite("normal_map.png", colors)
+        cv2.imwrite(new_path, colors)
     elif output_format == "exr":
-        cv2.imwrite("normal_map.exr", colors.astype(np.float32))
+        cv2.imwrite(new_path, colors.astype(np.float32))
     else:
         raise ValueError(
             "Invalid format {} (expected {})"
             .format(output_format, NORMAL_FORMAT_CHOICES))
 
     end = time.time()
-    print("Finished. Conversion took " + str(end - start) + "s.")
+    print('Wrote "{}".'.format(new_path))
+    print("Conversion took " + str(end - start) + "s.")
 
 
 if __name__ == '__main__':
