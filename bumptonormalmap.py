@@ -32,12 +32,34 @@
 #
 # Note that the normals are transformed from [-1,1] space to [0,1] space (normal * vec3(0.5) + vec3(0.5)).
 # Remember to undo the transformation (vec3(2.0) * normal - vec3(1.0)) when reading the normals from the normal map.
-
-import cv2
-import numpy as np
+import argparse
+import platform
 import sys
 import time
-import argparse
+
+missing_packages = {}
+try:
+    import cv2
+except ImportError:
+    missing_packages["cv2"] = "python3-opencv"
+try:
+    import numpy as np
+except ImportError:
+    missing_packages["numpy"] = "python3-numpy"
+if missing_packages:
+    sys.stderr.write(
+        "ImportError: You must install the missing dependencies(s) {} from pip/conda"
+        .format(list(missing_packages.keys())))
+    if platform.system() != "Windows":
+        sys.stderr.write(
+            " or precompiled versions of compilable modules"
+            " if your distro provides them"
+            " (recommended in the case of such modules)")
+    print(":", file=sys.stderr)
+    for value in missing_packages.values():
+        sys.stderr.write(" {}".format(value))
+    print("", file=sys.stderr)
+    sys.exit(1)
 
 
 def normalize(vec: np.array) -> np.array:
