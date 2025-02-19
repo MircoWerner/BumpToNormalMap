@@ -1,0 +1,22 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"cSpell.words": [
+			"bumptonormalmap",
+			"ddepth",
+			"imread",
+			"IMREAD_ANYCOLOR",
+			"IMREAD_ANYDEPTH",
+			"imwrite",
+			"infty",
+			"ksize",
+			"linalg",
+			"opencv",
+			"sobel"
+		]
+	}
+}
